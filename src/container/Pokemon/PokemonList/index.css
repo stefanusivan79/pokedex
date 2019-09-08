@@ -1,0 +1,14 @@
+.container-list-pokemon {
+    border: 1px solid #e8e8e8;
+    border-radius: 4px;
+    overflow: auto;
+    padding: 12px 24px;
+    height: 300px;
+}
+
+.loading-container {
+    position: absolute;
+    bottom: 40px;
+    width: 100%;
+    text-align: center;
+}
