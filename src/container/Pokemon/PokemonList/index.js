@@ -93,7 +93,15 @@ class PokemonList extends Component {
                         useWindow={false}
                     >
                         <List
-                            grid={{gutter: 16, column: 8}}
+                            grid={{
+                                gutter: 16,
+                                xs: 2,
+                                sm: 3,
+                                md: 4,
+                                lg: 5,
+                                xl: 6,
+                                xxl: 8
+                            }}
                             dataSource={this.state.data}
                             renderItem={item => (
                                 <List.Item>
