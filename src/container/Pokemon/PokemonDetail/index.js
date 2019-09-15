@@ -1,5 +1,5 @@
 import React from 'react';
-import {Descriptions, List, Tabs} from 'antd';
+import {Card, Descriptions, List, Tabs} from 'antd';
 
 import 'antd/dist/antd.min.css';
 import './index.css';
@@ -8,9 +8,9 @@ const {TabPane} = Tabs;
 
 const PokemonDetail = (props) => {
 
-    let {types, sprites, abilities, moves, name} = props.pokemon;
+    let {types, sprites, abilities, name} = props.pokemon;
+    const {moves} = props;
 
-    let dataMoves = moves.map(obj => (obj.move.name));
     let dataAbilities = abilities.map(obj => (obj.ability.name));
 
     return (
@@ -47,10 +47,14 @@ const PokemonDetail = (props) => {
                     <div className="list-item">
                         <List
                             bordered
-                            dataSource={dataMoves}
+                            dataSource={moves}
                             renderItem={item => (
-                                <List.Item>
-                                    {item}
+                                <List.Item key={item.id}>
+                                    <Card title={item.name} style={{width: 300}}>
+                                        <div>Target : {item.target.name}</div>
+                                        <div>Type : {item.type.name}</div>
+                                        <div>Accuracy : {null == item.accuracy ? "-" : item.accuracy}</div>
+                                    </Card>
                                 </List.Item>
                             )}
                         />
