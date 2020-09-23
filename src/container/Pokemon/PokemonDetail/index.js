@@ -1,68 +1,48 @@
-import React from 'react';
-import {Card, Descriptions, List, Tabs} from 'antd';
-
-import 'antd/dist/antd.min.css';
+import { Tabs } from 'antd';
+import React, { Component } from 'react';
+import BasicInfo from './BasicInfo';
 import './index.css';
+import Ability from "./Ability";
+import Move from "./Move";
+import BasicStatus from "./BasicStatus";
 
-const {TabPane} = Tabs;
 
-const PokemonDetail = (props) => {
+const { TabPane } = Tabs;
 
-    let {types, sprites, abilities, name} = props.pokemon;
-    const {moves} = props;
+class PokemonDetail extends Component {
 
-    let dataAbilities = abilities.map(obj => (obj.ability.name));
+  state = {
+    defaultActiveKey: 1
+  }
 
+  componentWillUnmount() {
+    this.setState({
+      defaultActiveKey: 1
+    })
+  }
+
+  render() {
+    const { name, base_experience, height, weight, types, sprites, abilities, moves, stats } = this.props.pokemon;
     return (
-        <div style={{padding: 30}}>
-            <Tabs defaultActiveKey="1" type="card">
-                <TabPane tab="Basic Info" key="1">
-                    <img alt={"pokemon"} src={sprites.front_default}/>
-                    <Descriptions bordered column={1} style={{width: 500}}>
-                        <Descriptions.Item label="Name">{name}</Descriptions.Item>
-                        <Descriptions.Item label="Types">
-                            {types.map(obj => (
-                                <div key={obj.type.url}>
-                                    <span>{obj.type.name}</span>
-                                    <br/>
-                                </div>
-                            ))}
-                        </Descriptions.Item>
-                    </Descriptions>
-                </TabPane>
-                <TabPane tab="Abilities" key="2">
-                    <div className="list-item">
-                        <List
-                            bordered
-                            dataSource={dataAbilities}
-                            renderItem={item => (
-                                <List.Item>
-                                    {item}
-                                </List.Item>
-                            )}
-                        />
-                    </div>
-                </TabPane>
-                <TabPane tab="Moves" key="3">
-                    <div className="list-item">
-                        <List
-                            bordered
-                            dataSource={moves}
-                            renderItem={item => (
-                                <List.Item key={item.id}>
-                                    <Card title={item.name} style={{width: 300}}>
-                                        <div>Target : {item.target.name}</div>
-                                        <div>Type : {item.type.name}</div>
-                                        <div>Accuracy : {null == item.accuracy ? "-" : item.accuracy}</div>
-                                    </Card>
-                                </List.Item>
-                            )}
-                        />
-                    </div>
-                </TabPane>
-            </Tabs>
-        </div>
+      <div style={{ padding: 30 }}>
+        <Tabs defaultActiveKey={this.state.defaultActiveKey} type="card">
+          <TabPane tab="Basic Info" key="1">
+            <BasicInfo name={name} base_experience={base_experience} weight={weight} height={height}
+                       types={types} sprites={sprites} />
+          </TabPane>
+          <TabPane tab="Basic Status" key="2">
+            <BasicStatus stats={stats} />
+          </TabPane>
+          <TabPane tab="Abilities" key="3">
+            <Ability abilities={abilities} />
+          </TabPane>
+          <TabPane tab="Moves" key="4">
+            <Move moves={moves} />
+          </TabPane>
+        </Tabs>
+      </div>
     );
-};
+  }
+}
 
 export default PokemonDetail;

@@ -1,129 +1,166 @@
-import {Button, Card, List, message, Spin} from 'antd';
+import { Button, Modal, Pagination, Table } from 'antd';
 import axios from 'axios';
-
-import InfiniteScroll from 'react-infinite-scroller';
-import React, {Component} from "react";
+import React, { Component } from "react";
+import PokemonDetail from '../PokemonDetail';
 import './index.css';
-import 'antd/dist/antd.min.css';
 
-let url = 'https://pokeapi.co/api/v2/pokemon/';
+let url = 'https://pokeapi.co/api/v2/pokemon/?offset=0&limit=10';
 
 class PokemonList extends Component {
 
-    constructor(props) {
-        super(props);
+  constructor(props) {
+    super(props);
 
-        this.state = {
-            data: [],
-            loading: false,
-            hasMore: true,
-            dataDetail: {},
-            isLoading: false
-        };
-
-    }
-
-
-    componentDidMount() {
-        this.fetchData(res => {
-            this.setState({
-                data: res.results,
-            });
-        });
-    }
-
-    fetchData = callback => {
-        axios.get(url)
-            .then(res => res.data)
-            .then(res => {
-                url = res.next;
-                callback(res);
-            })
+    this.state = {
+      isLoading: false,
+      count: null,
+      data: [],
+      visibleModal: false,
+      urlPokemon: '',
+      dataPokemon: {}
     };
 
-    handleInfiniteOnLoad = () => {
-        let {data} = this.state;
-        this.setState({
-            loading: true,
-        });
-        if (url == null) {
-            message.warning('Pokemon List loaded all');
-            this.setState({
-                hasMore: false,
-                loading: false,
-            });
-            return;
-        }
-        this.fetchData(res => {
-            data = data.concat(res.results);
-            this.setState({
-                data,
-                loading: false,
-            });
-        });
-    };
+  }
 
-    sendDataViewDetail = (url) => {
-        axios.get(url)
-            .then(res => {
-                this.setState({
-                    dataDetail: res.data,
-                    isLoading: false
-                }, () => {
-                    this.props.getDataPokemon(res.data)
-                });
-            })
-            .catch(err => {
-                this.setState({
-                    dataDetail: err,
-                    isLoading: false
-                })
-            });
-    };
+  componentDidMount() {
+    this.setState({
+      isLoading: true
+    })
 
-    render() {
-        return (
-            <div>
-                <div className="container-list-pokemon">
-                    <InfiniteScroll
-                        initialLoad={false}
-                        pageStart={0}
-                        loadMore={this.handleInfiniteOnLoad}
-                        hasMore={!this.state.loading && this.state.hasMore}
-                        useWindow={false}
-                    >
-                        <List
-                            grid={{
-                                gutter: 16,
-                                xs: 2,
-                                sm: 3,
-                                md: 4,
-                                lg: 5,
-                                xl: 6,
-                                xxl: 8
-                            }}
-                            dataSource={this.state.data}
-                            renderItem={item => (
-                                <List.Item>
-                                    <Card title={item.name}>
-                                        <Button type={"dashed"} onClick={() => this.sendDataViewDetail(item.url)}>
-                                            View
-                                        </Button>
-                                    </Card>
-                                </List.Item>
-                            )}
-                        >
-                            {this.state.loading && this.state.hasMore && (
-                                <div className="loading-container">
-                                    <Spin/>
-                                </div>
-                            )}
-                        </List>
-                    </InfiniteScroll>
-                </div>
-            </div>
-        );
+    axios.get(url).then(response => {
+      const { count, results } = response.data;
+      results.forEach(x => {
+        x.key = x.name
+      });
+      this.setState({
+        count: count,
+        data: results,
+        isLoading: false
+      })
+    }).catch(error => {
+      console.error(`error : ${error}`)
+      this.setState({
+        isLoading: false
+      })
+    })
+  }
+
+  columns = [
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name'
+    },
+    {
+      title: 'Action',
+      render: (record) => {
+        return <Button onClick={() => this.showDetailPokemon(record.url)}>View</Button>
+      }
     }
+  ]
+
+  showDetailPokemon = (urlDetail) => {
+    axios.get(urlDetail).then(response => {
+      const { data } = response;
+      this.setState({
+        dataPokemon: data,
+        urlPokemon: urlDetail,
+        visibleModal: true
+      })
+    });
+  }
+
+  fetchData = (page, limit) => {
+    this.setState({
+      isLoading: true
+    })
+    const offset = (page * limit) - limit;
+    const urlApi = `https://pokeapi.co/api/v2/pokemon/?offset=${offset}&limit=${limit}`;
+    axios.get(urlApi).then(response => {
+      const { count, results } = response.data;
+      results.forEach(x => {
+        x.key = x.name
+      });
+      this.setState({
+        count: count,
+        data: results,
+        isLoading: false
+      })
+    }).catch(error => {
+      this.setState({
+        isLoading: false
+      })
+    })
+
+  }
+
+  displayTable = (data, isLoading) => {
+    return (
+      <Table
+        dataSource={data}
+        columns={this.columns}
+        pagination={false}
+        loading={isLoading}
+      />
+    );
+  }
+
+  displayPagination = (count) => {
+    return (
+      <Pagination
+        style={{ float: "right" }}
+        total={count}
+        showSizeChanger
+        defaultCurrent={1}
+        onChange={(page, pageSize) => this.fetchData(page, pageSize)}
+        onShowSizeChange={(current, size) => {
+          if (current === 0) current = 1;
+          this.fetchData(current, size);
+        }}
+      />
+    )
+  }
+
+  handleOk = e => {
+    this.setState({
+      visibleModal: false,
+    });
+  };
+
+  handleCancel = e => {
+    this.setState({
+      visibleModal: false,
+      urlPokemon: ''
+    });
+  };
+
+  render() {
+    const { count, data, isLoading, dataPokemon } = this.state;
+
+    return (
+      <>
+        <div style={{ width: '50%', margin: 'auto' }}>
+          <h2>Pokédex</h2>
+
+          {this.displayTable(data, isLoading)}
+
+          <br />
+
+          {this.displayPagination(count)}
+
+          <br />
+        </div>
+        <Modal
+          title="Pokemon Detail"
+          visible={this.state.visibleModal}
+          onCancel={this.handleCancel}
+          footer={null}
+        >
+          <PokemonDetail pokemon={dataPokemon} />
+        </Modal>
+      </>
+    );
+  }
 }
 
 export default PokemonList;
